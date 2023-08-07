@@ -23,6 +23,9 @@ class RedactingFormatter(logging.Formatter):
         self.fields = fields
 
     def format(self, record: logging.LogRecord) -> str:
+        """
+        formats a LogRecord.
+        """
         def filter_datum(match):
             return self.REDACTION
 
@@ -33,10 +36,18 @@ class RedactingFormatter(logging.Formatter):
         )
         return super().format(record)
 
+
 def filter_datum(fields: list[str], redaction: str, message: str, separator: str) -> str:
+    """
+    Filters a log line.
+    """
     return re.sub(rf'({"|".join(fields)})=([^{separator}]*{separator})', f'{redaction}{separator}', message)
 
+
 def get_logger() -> logging.Logger:
+    """
+    Creates a new logger for user data
+    """
     logger = logging.getLogger("user_data")
     logger.setLevel(logging.INFO)
     logger.propagate = False
@@ -46,7 +57,11 @@ def get_logger() -> logging.Logger:
     logger.addHandler(handler)
     return logger
 
+
 def get_db() -> mysql.connector.connection.MySQLConnection:
+    """
+    Creates a connector to a database.
+    """
     username = os.getenv("PERSONAL_DATA_DB_USERNAME", "root")
     password = os.getenv("PERSONAL_DATA_DB_PASSWORD", "")
     host = os.getenv("PERSONAL_DATA_DB_HOST", "localhost")
@@ -60,7 +75,11 @@ def get_db() -> mysql.connector.connection.MySQLConnection:
     )
     return connection
 
+
 def main() -> None:
+    """
+    Logs the information about user records in a table.
+    """
     logger = get_logger()
     db = get_db()
 
@@ -73,6 +92,7 @@ def main() -> None:
 
     cursor.close()
     db.close()
+
 
 if __name__ == "__main__":
     main()
