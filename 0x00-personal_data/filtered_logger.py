@@ -6,6 +6,7 @@ import logging
 import os
 import mysql.connector
 import re
+import bcrypt
 
 PII_FIELDS = ('name', 'email', 'phone', 'ssn', 'password')
 
@@ -32,6 +33,8 @@ class RedactingFormatter(logging.Formatter):
         )
         return super().format(record)
 
+def filter_datum(fields: list[str], redaction: str, message: str, separator: str) -> str:
+    return re.sub(rf'({"|".join(fields)})=([^{separator}]*{separator})', f'{redaction}{separator}', message)
 
 def get_logger() -> logging.Logger:
     logger = logging.getLogger("user_data")
@@ -42,7 +45,6 @@ def get_logger() -> logging.Logger:
     handler.setFormatter(formatter)
     logger.addHandler(handler)
     return logger
-
 
 def get_db() -> mysql.connector.connection.MySQLConnection:
     username = os.getenv("PERSONAL_DATA_DB_USERNAME", "root")
@@ -58,8 +60,7 @@ def get_db() -> mysql.connector.connection.MySQLConnection:
     )
     return connection
 
-
-def main():
+def main() -> None:
     logger = get_logger()
     db = get_db()
 
@@ -68,11 +69,10 @@ def main():
 
     logger.info("Filtered data:")
     for row in cursor.fetchall():
-        logger.info("; ".join(f"{f}={v}" for f, v in zip(cursor.column_names, row)))
+        logger.info("; ".join(f"{field}={value}" for field, value in zip(cursor.column_names, row)))
 
     cursor.close()
     db.close()
-
 
 if __name__ == "__main__":
     main()
