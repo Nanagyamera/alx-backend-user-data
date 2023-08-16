@@ -41,7 +41,7 @@ class DB:
         return new_user
 
     def find_user_by(self, **kwargs) -> User:
-        """Finds a user based on a set of filters.
+        """Finds a user in the database based on input arguments
         """
         fields, values = [], []
         for key, value in kwargs.items():
@@ -60,17 +60,12 @@ class DB:
     def update_user(self, user_id: int, **kwargs) -> None:
         """Updates a user based on a given id.
         """
-        user = self.find_user_by(id=user_id)
-        if user is None:
-            return
-        update_source = {}
-        for key, value in kwargs.items():
-            if hasattr(User, key):
-                update_source[getattr(User, key)] = value
+        user_to_update = self.find_user_by(id=user_id)
+
+        for attr_name, value in kwargs.items():
+            if hasattr(User, attr_name):
+                setattr(user_to_update, attr_name, value)
             else:
-                raise ValueError()
-        self._session.query(User).filter(User.id == user_id).update(
-            update_source,
-            synchronize_session=False,
-        )
+                raise ValueError(f"'{attr_name}' is not a valid user attribute")
+
         self._session.commit()
