@@ -67,5 +67,4 @@ class DB:
                 setattr(user_to_update, attr_name, value)
             else:
                 raise ValueError(f"'{attr_name}' is not a valid user attribute")
-
         self._session.commit()
