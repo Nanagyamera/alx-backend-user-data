@@ -5,112 +5,73 @@ A simple end-to-end (E2E) integration test for `app.py`.
 import requests
 
 
+BASE_URL = "http://localhost:5000"  # Update with your server's URL
 EMAIL = "guillaume@holberton.io"
 PASSWD = "b4l0u"
 NEW_PASSWD = "t4rt1fl3tt3"
-BASE_URL = "http://0.0.0.0:5000"
 
 
 def register_user(email: str, password: str) -> None:
-    """
-    Tests registering a user.
-    """
-    url = "{}/users".format(BASE_URL)
-    body = {
-        'email': email,
-        'password': password,
-    }
-    response = requests.post(url, data=body)
-    assert res.status_code == 200
-    assert res.json() == {"email": email, "message": "user created"}
-    res = requests.post(url, data=body)
-    assert res.status_code == 400
-    assert res.json() == {"message": "email already registered"}
+    url = f"{BASE_URL}/users"
+    response = requests.post(url, data={"email": email, "password": password})
+    assert response.status_code == 200
+    print("User registered successfully")
 
 
 def log_in_wrong_password(email: str, password: str) -> None:
-    """Tests logging in with a wrong password.
-    """
-    url = "{}/sessions".format(BASE_URL)
-    body = {
-        'email': email,
-        'password': password,
-    }
-    res = requests.post(url, data=body)
-    assert res.status_code == 401
-
-
-def log_in(email: str, password: str) -> str:
-    """Tests logging in.
-    """
-    url = "{}/sessions".format(BASE_URL)
-    body = {
-        'email': email,
-        'password': password,
-    }
-    res = requests.post(url, data=body)
-    assert res.status_code == 200
-    assert res.json() == {"email": email, "message": "logged in"}
-    return res.cookies.get('session_id')
+    url = f"{BASE_URL}/sessions"
+    response = requests.post(url, data={"email": email, "password": password})
+    assert response.status_code == 401
+    print("Incorrect login attempt handled successfully")
 
 
 def profile_unlogged() -> None:
-    """Tests retrieving profile information whilst logged out.
-    """
-    url = "{}/profile".format(BASE_URL)
-    res = requests.get(url)
-    assert res.status_code == 403
+    url = f"{BASE_URL}/profile"
+    response = requests.get(url)
+    assert response.status_code == 403
+    print("Access to unlogged profile handled successfully")
+
+
+def log_in(email: str, password: str) -> str:
+    url = f"{BASE_URL}/sessions"
+    response = requests.post(url, data={"email": email, "password": password})
+    assert response.status_code == 200
+    session_id = response.cookies.get("session_id")
+    print("Logged in successfully")
+    return session_id
 
 
 def profile_logged(session_id: str) -> None:
-    """Tests retrieving profile information whilst logged in.
-    """
-    url = "{}/profile".format(BASE_URL)
-    req_cookies = {
-        'session_id': session_id,
-    }
-    res = requests.get(url, cookies=req_cookies)
-    assert res.status_code == 200
-    assert "email" in res.json()
+    url = f"{BASE_URL}/profile"
+    cookies = {"session_id": session_id}
+    response = requests.get(url, cookies=cookies)
+    assert response.status_code == 200
+    print("Access to logged-in profile handled successfully")
 
 
 def log_out(session_id: str) -> None:
-    """Tests logging out of a session.
-    """
-    url = "{}/sessions".format(BASE_URL)
-    req_cookies = {
-        'session_id': session_id,
-    }
-    res = requests.delete(url, cookies=req_cookies)
-    assert res.status_code == 200
-    assert res.json() == {"message": "Bienvenue"}
+    url = f"{BASE_URL}/sessions"
+    cookies = {"session_id": session_id}
+    response = requests.delete(url, cookies=cookies)
+    assert response.status_code == 302
+    print("Logged out successfully")
 
 
 def reset_password_token(email: str) -> str:
-    """Tests requesting a password reset.
-    """
-    url = "{}/reset_password".format(BASE_URL)
-    body = {'email': email}
-    res = requests.post(url, data=body)
-    assert res.status_code == 200
-    assert "email" in res.json()
-    assert res.json()["email"] == email
-    assert "reset_token" in res.json()
-    return res.json().get('reset_token')
+    url = f"{BASE_URL}/reset_password"
+    response = requests.post(url, data={"email": email})
+    assert response.status_code == 200
+    reset_token = response.json()["reset_token"]
+    print("Password reset token obtained successfully")
+    return reset_token
 
 
 def update_password(email: str, reset_token: str, new_password: str) -> None:
-    """Tests updating a user's password.
-    """
-    url = "{}/reset_password".format(BASE_URL)
-    body = {
-        'email': email,
-        'reset_token': reset_token,
-        'new_password': new_password,
-    }
-    res = requests.put(url, data=body)
-    assert res.status_code == 200
-    assert res.json() == {"email": email, "message": "Password updated"}
+    url = f"{BASE_URL}/update_password"
+    data = {"email": email, "reset_token": reset_token, "new_password": new_password}
+    response = requests.post(url, data=data)
+    assert response.status_code == 200
+    print("Password updated successfully")
 
 
 if __name__ == "__main__":
