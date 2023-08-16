@@ -68,8 +68,13 @@ def reset_password_token(email: str) -> str:
 
 def update_password(email: str, reset_token: str, new_password: str) -> None:
     url = f"{BASE_URL}/update_password"
-    data = {"email": email, "reset_token": reset_token, "new_password": new_password}
-    response = requests.post(url, data=data)
+    body = {
+        'email': email,
+        'reset_token': reset_token,
+        'new_password': new_password,
+    }
+    data = {body}
+    response = requests.post(url, data=body)
     assert response.status_code == 200
     print("Password updated successfully")
 
